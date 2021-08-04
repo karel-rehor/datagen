@@ -1,0 +1,8 @@
+{
+  "org": "dev",
+  "bucket": "qa",
+  "token": "V9omkrVOkJv0lx8Y3fwd4Lfv7Zu78Fn7yOvixEhIxBWMLwofLxFIkRr51kJKkb1BwqPs_Niun-vuZ2huFT2OHQ==",
+  "endpoint": "https://twodotoh.a.influxcloud.dev.local/",
+  "skipVerify": true,
+  "verbose": true
+}
