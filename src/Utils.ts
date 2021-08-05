@@ -11,19 +11,23 @@ interface TimeExpr {
 }
 
 function parseTime(timeString: string){
-    let result: TimeExpr = {measure: 0, unit: 's'};
-    let range: string[] = timeString.match(/[-]?[0-9]*/)
-    result.measure = parseInt(range.toString());
-    let domain = timeString.match(/[mnus].*/).toString()
-    // @ts-ignore
-    result.unit = domain;
+    const result: TimeExpr = {measure: 0, unit: 's'};
+    const range: RegExpMatchArray | null = timeString.match(/[-]?[0-9]*/)
+    if(range) {
+        result.measure = parseInt(range.toString());
+        const match: RegExpMatchArray | null =  timeString.match(/[mnus].*/)
+        if(!match){
+            throw `failed to match timeString to "${timeString}}" to time unit`
+        }
+        result.unit = match.toString() as TimeExpr["unit"]
+    }
     return result;
 }
 
-/*assume number in ms - for now*/
+/* assume number in ms - for now */
 function calcTimeStamp(unit: string, prec: string, base: number){
     let msBase: number = 0;
-    let now = new Date().getTime();
+    const now = new Date().getTime();
 
     switch(unit){
         case "s":
@@ -56,15 +60,15 @@ function calcTimeStamp(unit: string, prec: string, base: number){
     }
 }
 
-export async function addTimestampToRecsFromFile(filePath: string, timeDif: string) {
+export function addTimestampToRecsFromFile(filePath: string, timeDif: string) {
     const data = fs.readFileSync(filePath, 'utf-8');
     const lines = data.split('\n');
-    const now = new Date().getTime();
-    let timeFrame: TimeExpr = parseTime(timeDif);
+    // const now = new Date().getTime();
+    const timeFrame: TimeExpr = parseTime(timeDif);
 
-    //Todo use calcTime above
-    let timeStamp = calcTimeStamp(timeFrame.unit, "ms", timeFrame.measure);
-    let result: string[] = [];
+    // Todo use calcTime above
+    const timeStamp = calcTimeStamp(timeFrame.unit, "ms", timeFrame.measure);
+    const result: string[] = [];
 
     lines.forEach((line) => {
         if (line.trim().length > 0) {
@@ -76,11 +80,11 @@ export async function addTimestampToRecsFromFile(filePath: string, timeDif: stri
 }
 
 // noinspection DuplicatedCode
-export async function addTimestampToRecs(recs: string[], timeDif: string){
+export function addTimestampToRecs(recs: string[], timeDif: string){
 
-    let timeFrame: TimeExpr = parseTime(timeDif);
-    let timeStamp = calcTimeStamp(timeFrame.unit, "ms", timeFrame.measure);
-    let result: string[] = [];
+    const timeFrame: TimeExpr = parseTime(timeDif);
+    const timeStamp = calcTimeStamp(timeFrame.unit, "ms", timeFrame.measure);
+    const result: string[] = [];
 
     recs.forEach((line) => {
         if (line.trim().length > 0) {
@@ -88,11 +92,11 @@ export async function addTimestampToRecs(recs: string[], timeDif: string){
         }
     })
 
-    return result;
+    return Promise.resolve(result)
 
 }
 
-function prepTags(tags: {key: string, vals: string[]}[], randomize = false){
+function _prepTags(tags: {key: string, vals: string[]}[], randomize = false){
     let result: string = '';
     let valIndex = 0;
     for(let i = 0; i < tags.length; i++){
@@ -107,40 +111,37 @@ function prepTags(tags: {key: string, vals: string[]}[], randomize = false){
             result += ','
         }
     }
-//    console.log(`DEBUG result: ${result}`)
     return result;
 }
 
-function prepFields(fields: {key: string, val: any}[]){
+function _prepFields(fields: {key: string, val: any}[]){
     let result: string = '';
 
     for(let i = 0; i < fields.length; i++){
-        if(typeof(fields[i].val === 'function')){
+        if(typeof(fields[i].val) === 'function'){
             result += `${fields[i].key}=${fields[i].val()}`
         }else{
             result += `${fields[i].key}=${fields[i].val}`
         }
         if(fields[i+1]){ result += ','}
-//        console.log(`DEBUG typeof fields[${i}].val ${typeof(fields[i].val)}`)
-//        console.log(`DEBUG result ${result}`);
     }
     return result;
 }
 
-export async function addStaggerTimestampToRecs(recs: string[], timeDif: string, stagger: string){
+export function addStaggerTimestampToRecs(recs: string[], timeDif: string, stagger: string){
 
-    let result: string[] = []
+    const result: string[] = []
 
     for(let i = 0; i < recs.length; i++){
-        let timeFrame: TimeExpr = parseTime(timeDif);
-        let staggerFrame: TimeExpr = parseTime(stagger);
+        const timeFrame: TimeExpr = parseTime(timeDif);
+        const staggerFrame: TimeExpr = parseTime(stagger);
         if(timeFrame.unit !== staggerFrame.unit){
             throw (`Time units do not match: ${timeFrame.unit} !== ${staggerFrame.unit}`)
         }
         if(recs[i].match(/.* .*/)){
-            let timeStamp = calcTimeStamp(timeFrame.unit, "ms", timeFrame.measure + (staggerFrame.measure * i))
+            const timeStamp = calcTimeStamp(timeFrame.unit, "ms", timeFrame.measure + (staggerFrame.measure * i))
             result.push(recs[i] + " " + timeStamp);
         }
     }
-    return result;
+    return Promise.resolve(result)
 }

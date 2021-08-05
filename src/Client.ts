@@ -1,4 +1,8 @@
-import {InfluxDB, FluxTableMetaData, Point, HttpError, WritePrecisionType} from '@influxdata/influxdb-client';
+import {InfluxDB,
+//    FluxTableMetaData,
+//    Point,
+//    HttpError,
+    WritePrecisionType} from '@influxdata/influxdb-client';
 
 export interface InfluxParams {
     url: string,
@@ -8,7 +12,7 @@ export interface InfluxParams {
 }
 
 interface Dico {
-    [k:string]: string
+    [k: string]: string
 }
 /*
 * recs strings should be in valid line protocol
@@ -27,11 +31,11 @@ export async function writeLP(connect: InfluxParams, prec: string, recs: string[
     await writeApi
         .close()
         .then(()=> {
-            //console.log('Wrote recs:\n' + recs.join('\n'));
+            // console.log('Wrote recs:\n' + recs.join('\n'));
         })
         .catch((e) => {
             console.error(e)
-            console.log('\nFinished ERROR')
+            console.error('\nFinished ERROR')
         })
 }
 
@@ -44,8 +48,8 @@ export async function query(connect: InfluxParams, fluxQuery: string, cols: stri
 
 //    console.log('*** QUERY LINES ***')
 
-    //TODO make result object array
-    let result : Dico[] = [];
+    // TODO make result object array
+    const result: Dico[] = [];
 
     /*
     cols.forEach((col) => { result += `${col} `})
@@ -55,10 +59,10 @@ export async function query(connect: InfluxParams, fluxQuery: string, cols: stri
         queryApi.queryRows(fluxQuery, {
             next(row, tableMeta) {
                 const o = tableMeta.toObject(row);
-                let line: Dico = {}
+                const line: Dico = {}
                 cols.forEach((col) => {line[col] = o[col] })
 //                console.log(`DEBUG QRR: ${JSON.stringify(line)}`)
-                //result += `${line}\n`;
+                // result += `${line}\n`;
                 result.push(line)
             },
             error(e) {
